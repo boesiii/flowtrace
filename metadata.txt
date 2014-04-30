@@ -12,7 +12,7 @@
 name=Flow Trace
 qgisMinimumVersion=2.0
 description=Select line segments upstream of a selected line segment
-version=0.3
+version=0.3.1
 author=Ed B
 email=boesiii@yahoo.com
 
@@ -26,7 +26,7 @@ changelog= added github
 # tags are comma separated with spaces allowed
 tags=lines,select
 
-homepage=
+homepage=https://github.com/boesiii/flowtrace
 tracker=https://github.com/boesiii/flowtrace/issues
 repository=https://github.com/boesiii/flowtrace
 icon=icon.png

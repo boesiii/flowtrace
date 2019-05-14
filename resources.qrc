@@ -1,5 +1,0 @@
-<RCC>
-    <qresource prefix="/plugins/flowtrace" >
-        <file>icon.png</file>
-    </qresource>
-</RCC>

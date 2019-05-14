@@ -1,0 +1,39 @@
+# This file contains metadata for your plugin. Since 
+# version 2.0 of QGIS this is the proper way to supply 
+# information about a plugin. The old method of 
+# embedding metadata in __init__.py will 
+# is no longer supported since version 2.0.
+
+# This file should be included when you package your plugin.# Mandatory items:
+
+[general]
+name=Flow Trace
+qgisMinimumVersion=3.0
+description=Select line segments upstream of a selected line segment
+version=1.0
+author=Ed B
+email=boesiii@yahoo.com
+
+about=This Plugin will select all upstream polyline segments starting from a selected line segment.  The only data you need to supply is a layer with polyline segments and a selected feature from the layer.  If no segments are selected then you have connectivity issues with your data.
+
+tracker=https://github.com/boesiii/flowtrace/issues
+repository=https://github.com/boesiii/flowtrace
+# End of mandatory metadata
+
+# Recommended items:
+
+# Uncomment the following line and add your changelog:
+# changelog=upgraded to 3.4
+
+# Tags are comma separated with spaces allowed
+tags=python
+
+homepage=https://github.com/boesiii/flowtrace
+category=Vector
+icon=icon.png
+# experimental flag
+experimental=False
+
+# deprecated flag (applies to the whole plugin, not just a single version)
+deprecated=False
+

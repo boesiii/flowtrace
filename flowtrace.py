@@ -32,7 +32,7 @@ from .resources import *
 from .flowtrace_dialog import flowTraceDialog
 import os.path
 from qgis.gui import QgsMessageBar
-from qgis.core import QgsFeatureRequest, QgsRectangle, QgsDistanceArea
+from qgis.core import QgsFeatureRequest, QgsRectangle, QgsDistanceArea, QgsWkbTypes
 
 class flowTrace:
     """QGIS Plugin Implementation."""
@@ -183,7 +183,19 @@ class flowTrace:
                 action)
             self.iface.removeToolBarIcon(action)
 
-
+    # get geometry from different geometry types
+    def get_geometry (self, fg):
+        # test for multilinestring
+        if fg.wkbType() == 5: 
+            nodes = fg.asMultiPolyline()[0]
+            return nodes
+                        
+        # test for linesting
+        if fg.wkbType() == 2:
+            nodes = fg.asPolyline()
+            return nodes
+        
+    
     def run(self):
         """Run method that performs all the real work"""
 
@@ -225,7 +237,7 @@ class flowTrace:
                 rec = .0001
                 tolerance = .0001
             else:
-                rec = 1
+                rec = .1
                 
             #iterate thru features to add to lists
             for feature in features:            
@@ -236,7 +248,9 @@ class flowTrace:
                 #get feature geometry
                 geom = feature.geometry()
                 # print (feature.geometry())
-                print ('geometry is: ' + str(geom.type()))
+                # print ('type: ' + str(geom.wkbType()))
+                # print ('string: ' + QgsWkbTypes.displayString(geom.wkbType()))
+                # print ('geometry is: ' + str(geom.type()))
                 # if geom.type() != QgsWkbTypes.LineGeometry:
                 # https://qgis.org/api/classQgsWkbTypes.html
                 if geom.type() != 1:
@@ -247,20 +261,20 @@ class flowTrace:
                     
             #loop thru selection list
             while selection_list:
-                # print ('length -- ' + str(len(selection_list)))
+                
                 #get selected features
                 request = QgsFeatureRequest().setFilterFid(selection_list[0])
                 # request = QgsFeatureRequest()
                 feature = next(clayer.getFeatures(request))
                 geom = feature.geometry()
-                # print (geom)
-                
-                # get list of nodes
-                nodes = feature.geometry().asMultiPolyline()
+
+                # get nodes
+                nodes = self.get_geometry (feature.geometry())
                 # print(nodes)
                 
                 # get upstream node
-                upstream_coord = nodes[0][0]
+                upstream_coord = nodes[0]
+                # print (upstream_coord)
                                 
                 # select all features around upstream coordinate 
                 # using a bounding box
@@ -274,16 +288,9 @@ class flowTrace:
                 
                  #iterate thru requested features
                 for feature in features:
-                    # print (feature)
-                    
-                    #get list of nodes
-                    #print feature.id()
-                    # nodes = feature.geometry().asPolyline()
-                    nodes = feature.geometry().asMultiPolyline()
-                    # print(nodes)
-                
-                    # get upstream node
-                    downstream_coord = nodes[-1][-1]
+                    # get nodes
+                    nodes = self.get_geometry (feature.geometry())
+                    downstream_coord = nodes[-1]
                     
                     #setup distance
                     distance = QgsDistanceArea()

@@ -210,9 +210,12 @@ class flowTrace:
         # Run the dialog event loop
         result = self.dlg.exec_()
         # See if OK was pressed
+        
+        final_list = []
+        
         if result:
             #setup final selection list
-            final_list = []
+            
             #setup temporary selection list
             selection_list = []
             #add tolerance value

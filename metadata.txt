@@ -10,7 +10,7 @@
 name=Flow Trace
 qgisMinimumVersion=3.0
 description=Select line segments upstream of a selected line segment
-version=1.0.2
+version=1.0.3
 author=Ed B
 email=boesiii@yahoo.com
 

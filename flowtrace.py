@@ -205,11 +205,15 @@ class flowTrace:
             self.first_start = False
             self.dlg = flowTraceDialog()
 
+        clayer = self.iface.mapCanvas().currentLayer()
+        self.dlg.labelLayer.setText(clayer.name())
+        self.dlg.labelNumFeatures.setText(str(len(clayer.selectedFeatures())))
         # show the dialog
         self.dlg.show()
         # Run the dialog event loop
         result = self.dlg.exec_()
         # See if OK was pressed
+        
         
         final_list = []
         
@@ -222,7 +226,7 @@ class flowTrace:
             tolerance = 1
             #get current layer
             clayer = self.iface.mapCanvas().currentLayer()
-            # print (clayer)
+            print (clayer.name())
             
             if clayer is None:
                 return 

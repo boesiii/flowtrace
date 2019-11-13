@@ -1,7 +1,9 @@
 @echo off
-call "C:\Program Files\QGIS 3.2\bin\o4w_env.bat"
-call "C:\Program Files\QGIS 3.2\bin\qt5_env.bat"
-call "C:\Program Files\QGIS 3.2\bin\py3_env.bat"
+REM call "C:\OSGeo4W64\bin\o4w_env.bat"
+REM call "C:\OSGeo4W64\bin\qt5_env.bat"
+REM call "C:\OSGeo4W64\bin\py3_env.bat"
 
 @echo on
-"C:\Program Files\QGIS 3.2\apps\Python36\Scripts\pyrcc5" -o resources.py resources.qrc
+call "C:\Python37\Scripts\pyrcc5" -o resources.py resources.qrc
+
+pause

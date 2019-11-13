@@ -32,19 +32,20 @@
   <widget class="QLabel" name="label">
    <property name="geometry">
     <rect>
-     <x>90</x>
-     <y>170</y>
-     <width>191</width>
+     <x>100</x>
+     <y>180</y>
+     <width>151</width>
      <height>41</height>
     </rect>
    </property>
    <property name="font">
     <font>
+     <family>Arial</family>
      <pointsize>11</pointsize>
     </font>
    </property>
    <property name="text">
-    <string>Press OK to Begin Selection of Upstream Segments</string>
+    <string>Press OK to Begin Selection of Segments</string>
    </property>
    <property name="wordWrap">
     <bool>true</bool>
@@ -54,13 +55,14 @@
    <property name="geometry">
     <rect>
      <x>50</x>
-     <y>90</y>
+     <y>30</y>
      <width>101</width>
      <height>16</height>
     </rect>
    </property>
    <property name="font">
     <font>
+     <family>Arial</family>
      <pointsize>11</pointsize>
     </font>
    </property>
@@ -72,13 +74,14 @@
    <property name="geometry">
     <rect>
      <x>220</x>
-     <y>90</y>
+     <y>30</y>
      <width>151</width>
      <height>16</height>
     </rect>
    </property>
    <property name="font">
     <font>
+     <family>Arial</family>
      <pointsize>11</pointsize>
      <weight>75</weight>
      <bold>true</bold>
@@ -92,13 +95,14 @@
    <property name="geometry">
     <rect>
      <x>50</x>
-     <y>120</y>
-     <width>131</width>
+     <y>60</y>
+     <width>141</width>
      <height>31</height>
     </rect>
    </property>
    <property name="font">
     <font>
+     <family>Arial</family>
      <pointsize>11</pointsize>
     </font>
    </property>
@@ -113,13 +117,14 @@
    <property name="geometry">
     <rect>
      <x>220</x>
-     <y>130</y>
+     <y>70</y>
      <width>101</width>
      <height>16</height>
     </rect>
    </property>
    <property name="font">
     <font>
+     <family>Arial</family>
      <pointsize>11</pointsize>
      <weight>75</weight>
      <bold>true</bold>
@@ -127,6 +132,98 @@
    </property>
    <property name="text">
     <string>TextLabel</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_4">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>50</x>
+     <y>105</y>
+     <width>131</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Arial</family>
+     <pointsize>11</pointsize>
+    </font>
+   </property>
+   <property name="text">
+    <string>Tolerance</string>
+   </property>
+   <property name="wordWrap">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QDoubleSpinBox" name="SpinBoxTolerance">
+   <property name="geometry">
+    <rect>
+     <x>220</x>
+     <y>110</y>
+     <width>81</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="maximum">
+    <double>98.989999999999995</double>
+   </property>
+   <property name="singleStep">
+    <double>0.100000000000000</double>
+   </property>
+   <property name="value">
+    <double>0.100000000000000</double>
+   </property>
+  </widget>
+  <widget class="QRadioButton" name="upstream_radio_button">
+   <property name="geometry">
+    <rect>
+     <x>160</x>
+     <y>150</y>
+     <width>82</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Upstream</string>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QRadioButton" name="downstream_radio_button">
+   <property name="geometry">
+    <rect>
+     <x>240</x>
+     <y>150</y>
+     <width>111</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Downstream</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_5">
+   <property name="geometry">
+    <rect>
+     <x>50</x>
+     <y>150</y>
+     <width>71</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Arial</family>
+     <pointsize>11</pointsize>
+    </font>
+   </property>
+   <property name="text">
+    <string>Direction:</string>
    </property>
   </widget>
  </widget>

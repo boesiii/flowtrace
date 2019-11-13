@@ -32,7 +32,7 @@ from .resources import *
 from .flowtrace_dialog import flowTraceDialog
 import os.path
 from qgis.gui import QgsMessageBar
-from qgis.core import QgsFeatureRequest, QgsRectangle, QgsDistanceArea, QgsWkbTypes
+from qgis.core import QgsFeatureRequest, QgsRectangle, QgsDistanceArea, QgsWkbTypes, QgsMapSettings, QgsUnitTypes, QgsProject
 
 class flowTrace:
     """QGIS Plugin Implementation."""
@@ -205,17 +205,32 @@ class flowTrace:
             self.first_start = False
             self.dlg = flowTraceDialog()
 
+        # get current selected layer
         clayer = self.iface.mapCanvas().currentLayer()
+        # set layer name in dialog
         self.dlg.labelLayer.setText(clayer.name())
+        # set number of selected features in dialog
         self.dlg.labelNumFeatures.setText(str(len(clayer.selectedFeatures())))
+        # print(self.iface.mapCanvas().mapUnits())
         # show the dialog
         self.dlg.show()
         # Run the dialog event loop
         result = self.dlg.exec_()
-        # See if OK was pressed
-        
+        # get direct from dialog
+        direction = self.dlg.downstream_radio_button.isChecked()
         
         final_list = []
+        #add tolerance value
+        
+        # setup total length
+        totallength = 0.0
+        # distance = 0
+        
+        #setup distance
+        distance = QgsDistanceArea()
+        # the unit of measure will be set to the same as the layer
+        # maybe it would be better to set it to the map CRS
+        distance.setSourceCrs(clayer.sourceCrs(), QgsProject.instance().transformContext())
         
         if result:
             #setup final selection list
@@ -223,10 +238,11 @@ class flowTrace:
             #setup temporary selection list
             selection_list = []
             #add tolerance value
-            tolerance = 1
+            tolerance = 1 
+           
             #get current layer
             clayer = self.iface.mapCanvas().currentLayer()
-            print (clayer.name())
+            # print (clayer.name())
             
             if clayer is None:
                 return 
@@ -244,8 +260,9 @@ class flowTrace:
                 rec = .0001
                 tolerance = .0001
             else:
-                rec = .1
-                
+                #rec = .1
+                rec = self.dlg.SpinBoxTolerance.value()
+
             #iterate thru features to add to lists
             for feature in features:            
                 # add selected features to final list
@@ -254,18 +271,19 @@ class flowTrace:
                 selection_list.append(feature.id())
                 #get feature geometry
                 geom = feature.geometry()
-                # print (feature.geometry())
-                # print ('type: ' + str(geom.wkbType()))
-                # print ('string: ' + QgsWkbTypes.displayString(geom.wkbType()))
-                # print ('geometry is: ' + str(geom.type()))
-                # if geom.type() != QgsWkbTypes.LineGeometry:
+
+                
+
+                totallength = totallength + distance.measureLength(geom)
+                # print (QgsDistanceArea.lengthUnits)
+                   
                 # https://qgis.org/api/classQgsWkbTypes.html
                 if geom.type() != 1:
                     print ("Geometry not allowed")
                     QMessageBox.information(None, "Flow Trace",
                                     "Geometry not allowed, \nPlease select line geometry only.")
                     return
-                    
+ 
             #loop thru selection list
             while selection_list:
                 
@@ -277,12 +295,15 @@ class flowTrace:
 
                 # get nodes
                 nodes = self.get_geometry (feature.geometry())
-                # print(nodes)
                 
                 # get upstream node
-                upstream_coord = nodes[0]
-                # print (upstream_coord)
-                                
+                if direction :
+                    upstream_coord = nodes[-1]
+                    # print (upstream_coord)
+                else:
+                    upstream_coord = nodes[0]
+                    # print (upstream_coord)
+                    
                 # select all features around upstream coordinate 
                 # using a bounding box
                 rectangle = QgsRectangle(upstream_coord.x() - rec, 
@@ -297,10 +318,17 @@ class flowTrace:
                 for feature in features:
                     # get nodes
                     nodes = self.get_geometry (feature.geometry())
-                    downstream_coord = nodes[-1]
+                    #downstream_coord = nodes[-1]
                     
-                    #setup distance
-                    distance = QgsDistanceArea()
+                    # get upstream node
+                    if direction :
+                        downstream_coord = nodes[0]
+                        # print (upstream_coord)
+                    else:
+                        downstream_coord = nodes[-1]
+                        # print (upstream_coord)
+                    
+
                     
                     #get distance from downstream node to upstream node
                     dist = distance.measureLine(downstream_coord, 
@@ -313,6 +341,8 @@ class flowTrace:
                         if feature.id() not in selection_list:
                             #add feature to selection list
                             selection_list.append(feature.id())
+                            # Length from Line                            
+                            totallength = totallength + distance.measureLength(feature.geometry())
                             
                 
                 
@@ -320,17 +350,21 @@ class flowTrace:
                 selection_list.pop(0)
                 
         #select features using final_list           
-        # clayer.setSelectedFeatures(final_list)
-        # print (final_list)
-        # clayer.selectByIds([s.id() for s in final_list])
         for fid in final_list:
             clayer.select(fid)
         
         
         #refresh the canvas
         self.iface.mapCanvas().refresh()
+        
+        #add message box about length and number of features
         QMessageBox.information(None, 
                         "Flow Trace Complete", 
                         "Total Features Selected: " 
-                        + str(len(final_list)))
+                        + str(len(final_list)) 
+                        + "\r\n"
+                        + " Length: "
+                        + str(round(totallength,2))
+                        + ' ' + QgsUnitTypes.toString(distance.lengthUnits())
+                        )
                

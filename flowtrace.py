@@ -184,14 +184,14 @@ class flowTrace:
             self.iface.removeToolBarIcon(action)
 
     # get geometry from different geometry types
-    def get_geometry (self, fg):
-        # test for multilinestring
-        if fg.wkbType() == 5: 
+    def get_geometry(self, fg):
+        # test for MultiLineString, MultiLineStringZ, MultiLineStringM, MultiLineStringZM, MultiLineString25D
+        if fg.wkbType() in [5, 1005, 2005, 3005, -2147483643]:
             nodes = fg.asMultiPolyline()[0]
             return nodes
                         
-        # test for linesting
-        if fg.wkbType() == 2:
+        # test for LineString, LineStringZ, LineStringM, LineStringZM, LineString25D
+        if fg.wkbType() in [2, 1002, 2002, 3002, -2147483646]:
             nodes = fg.asPolyline()
             return nodes
         
@@ -207,6 +207,12 @@ class flowTrace:
 
         # get current selected layer
         clayer = self.iface.mapCanvas().currentLayer()
+
+        # make sure that the selected layer is a QgsVectorLayer of
+        # QgsWkbTypes.GeometryType.LineGeometry type before opening the dialog
+        if clayer is None or clayer.type() != 0 or clayer.geometryType() != 1:
+            return
+
         # set layer name in dialog
         self.dlg.labelLayer.setText(clayer.name())
         # set number of selected features in dialog
@@ -276,13 +282,6 @@ class flowTrace:
 
                 totallength = totallength + distance.measureLength(geom)
                 # print (QgsDistanceArea.lengthUnits)
-                   
-                # https://qgis.org/api/classQgsWkbTypes.html
-                if geom.type() != 1:
-                    print ("Geometry not allowed")
-                    QMessageBox.information(None, "Flow Trace",
-                                    "Geometry not allowed, \nPlease select line geometry only.")
-                    return
  
             #loop thru selection list
             while selection_list:

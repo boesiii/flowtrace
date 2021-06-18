@@ -239,22 +239,10 @@ class flowTrace:
         distance.setSourceCrs(clayer.sourceCrs(), QgsProject.instance().transformContext())
         
         if result:
-            #setup final selection list
-            
             #setup temporary selection list
             selection_list = []
             #add tolerance value
-            tolerance = 1 
-           
-            #get current layer
-            clayer = self.iface.mapCanvas().currentLayer()
-            # print (clayer.name())
-            
-            if clayer is None:
-                return 
-        
-            #get provider
-            provider = clayer.dataProvider()
+            tolerance = 1
             
             #get selected features
             features = clayer.selectedFeatures()

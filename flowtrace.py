@@ -24,15 +24,16 @@
 from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication
 from PyQt5.QtGui import QIcon
 # from PyQt5.QtWidgets import QAction
-from PyQt5.QtWidgets import QAction, QMessageBox
+from PyQt5.QtWidgets import QAction
 
 # Initialize Qt resources from file resources.py
 from .resources import *
 # Import the code for the dialog
 from .flowtrace_dialog import flowTraceDialog
-import os.path
-from qgis.gui import QgsMessageBar
-from qgis.core import QgsFeatureRequest, QgsRectangle, QgsDistanceArea, QgsWkbTypes, QgsMapSettings, QgsUnitTypes, QgsProject
+from qgis.core import QgsRectangle, QgsDistanceArea, QgsUnitTypes, QgsProject, QgsSpatialIndex
+
+import os
+import math
 
 class flowTrace:
     """QGIS Plugin Implementation."""
@@ -225,13 +226,6 @@ class flowTrace:
         # get direct from dialog
         direction = self.dlg.downstream_radio_button.isChecked()
         
-        final_list = []
-        #add tolerance value
-        
-        # setup total length
-        totallength = 0.0
-        # distance = 0
-        
         #setup distance
         distance = QgsDistanceArea()
         # the unit of measure will be set to the same as the layer
@@ -239,119 +233,73 @@ class flowTrace:
         distance.setSourceCrs(clayer.sourceCrs(), QgsProject.instance().transformContext())
         
         if result:
-            #setup temporary selection list
-            selection_list = []
-            #add tolerance value
-            tolerance = 1
-            
-            #get selected features
-            features = clayer.selectedFeatures()
-            
             # get crs for tolerance setting
             crs = self.iface.activeLayer().crs().authid()
             # print (crs)
             if crs == 'EPSG:4269':
-                rec = .0001
                 tolerance = .0001
             else:
-                #rec = .1
-                rec = self.dlg.SpinBoxTolerance.value()
+                tolerance = self.dlg.SpinBoxTolerance.value()
 
-            #iterate thru features to add to lists
-            for feature in features:            
-                # add selected features to final list
-                final_list.append(feature.id())
-                # add selected features to selection list for while loop
-                selection_list.append(feature.id())
-                #get feature geometry
-                geom = feature.geometry()
+            #index and create sets from layer
+            index = QgsSpatialIndex(clayer)
+            selection_set = set(clayer.selectedFeatureIds())
+            final_set = selection_set.copy()
+            dict_features = {feature.id():feature for feature in clayer.getFeatures()}
+            
 
+            #loop thru selection set
+            while selection_set:
+                # get upstream/downstream node of next feature
+                feature = dict_features[selection_set.pop()]
+                nodes = self.get_geometry(feature.geometry())
+                upstream_coord = nodes[0 - direction]
                 
-
-                totallength = totallength + distance.measureLength(geom)
-                # print (QgsDistanceArea.lengthUnits)
- 
-            #loop thru selection list
-            while selection_list:
                 
-                #get selected features
-                request = QgsFeatureRequest().setFilterFid(selection_list[0])
-                # request = QgsFeatureRequest()
-                feature = next(clayer.getFeatures(request))
-                geom = feature.geometry()
-
-                # get nodes
-                nodes = self.get_geometry (feature.geometry())
-                
-                # get upstream node
-                if direction :
-                    upstream_coord = nodes[-1]
-                    # print (upstream_coord)
-                else:
-                    upstream_coord = nodes[0]
-                    # print (upstream_coord)
-                    
-                # select all features around upstream coordinate 
+                # select all features around selected node 
                 # using a bounding box
-                rectangle = QgsRectangle(upstream_coord.x() - rec, 
-                                upstream_coord.y() - rec, 
-                                upstream_coord.x() + rec, 
-                                upstream_coord.y() + rec)
-                # rectangle = QgsRectangle (minx, miny, maxx, maxy)
-                request = QgsFeatureRequest().setFilterRect(rectangle)
-                features = clayer.getFeatures(request)
+                upstream_coord_x = upstream_coord.x()
+                upstream_coord_y = upstream_coord.y()
                 
-                 #iterate thru requested features
-                for feature in features:
-                    # get nodes
-                    nodes = self.get_geometry (feature.geometry())
-                    #downstream_coord = nodes[-1]
-                    
-                    # get upstream node
-                    if direction :
-                        downstream_coord = nodes[0]
-                        # print (upstream_coord)
-                    else:
-                        downstream_coord = nodes[-1]
-                        # print (upstream_coord)
-                    
-
-                    
-                    #get distance from downstream node to upstream node
-                    dist = distance.measureLine(downstream_coord, 
-                                    upstream_coord)
-                    
-                    if dist < tolerance:
-                        #add feature to final list
-                        final_list.append(feature.id())
+                rectangle = QgsRectangle(upstream_coord_x - tolerance, 
+                                         upstream_coord_y - tolerance, 
+                                         upstream_coord_x + tolerance, 
+                                         upstream_coord_y + tolerance)
+                
+                ls_fids = index.intersects(rectangle)
+                
+                
+                #iterate thru intersected features
+                for fid in ls_fids:
+                    if fid not in final_set:
+                        # get downstream/upstream coordinates
+                        feature = dict_features[fid]
+                        nodes = self.get_geometry(feature.geometry())
+                        downstream_coord = nodes[direction - 1]
                         
-                        if feature.id() not in selection_list:
-                            #add feature to selection list
-                            selection_list.append(feature.id())
-                            # Length from Line                            
-                            totallength = totallength + distance.measureLength(feature.geometry())
-                            
-                
-                
-                #remove feature from selection list
-                selection_list.pop(0)
-                
-        #select features using final_list           
-        for fid in final_list:
-            clayer.select(fid)
+                        #get distance between downstream and upstream nodes
+                        dist = math.sqrt((downstream_coord.x() - upstream_coord_x)**2
+                                         + (downstream_coord.y() - upstream_coord_y)**2)
+                        
+                        if dist <= tolerance:
+                            # if within tolerance, adds feature to selection and final set
+                            # set values being unique, a duplicate won't be created if
+                            # already present in the selection set
+                            final_set.add(fid)
+                            selection_set.add(fid)
+
+            #calculate total length
+            list_length = [distance.measureLength(dict_features[fid].geometry()) for fid in final_set]
+            total_length = sum(list_length)
+            
+            
+            #select features using final_set
+            clayer.selectByIds(list(final_set))
+            self.iface.mapCanvas().refresh()
         
-        
-        #refresh the canvas
-        self.iface.mapCanvas().refresh()
-        
-        #add message box about length and number of features
-        QMessageBox.information(None, 
-                        "Flow Trace Complete", 
-                        "Total Features Selected: " 
-                        + str(len(final_list)) 
-                        + "\r\n"
-                        + " Length: "
-                        + str(round(totallength,2))
-                        + ' ' + QgsUnitTypes.toString(distance.lengthUnits())
-                        )
-               
+            #add message bar about number of features selected and length
+            message = self.tr("{} features selected totalling {} {} in length."
+                              .format(len(final_set),
+                                      round(total_length,2),
+                                      QgsUnitTypes.toString(distance.lengthUnits())))
+            self.iface.messageBar().pushMessage("Flow Trace Completed", message, 0, 10)
